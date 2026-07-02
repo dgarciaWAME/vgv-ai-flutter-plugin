@@ -55,6 +55,14 @@ For more details, see the [Very Good Claude Marketplace][marketplace_link].
 | [**Very Good Analysis Upgrade**](skills/very-good-analysis-upgrade/SKILL.md) | Upgrade the `very_good_analysis` lint package across Dart/Flutter projects — version bump in `pubspec.yaml`, minimal lint fixes for new rules, and PR preparation |
 | [**Green Gate**](skills/green-gate/SKILL.md) | Autonomous verify-fix-rerun loop that drives a package to green across four quality gates — analyze, format, test, and coverage — exiting only when a final iteration proves all four pass with observed numbers (default 100% coverage, overridable) |
 
+## Agents
+
+This plugin ships subagents that Claude Code can dispatch as isolated, specialized reviewers. Unlike skills, agents are **not** invoked as slash commands — Claude dispatches them automatically, or you can ask Claude to run one by name (e.g. "review my changes with the flutter-reviewer agent").
+
+| Agent | Description |
+| ----- | ----------- |
+| [**Flutter Reviewer**](agents/flutter-reviewer.md) | Read-only reviewer of changed Dart code against the preloaded `bloc`, `testing`, `static-security`, and `accessibility` standards — emits a `location \| problem \| fix \| standard` findings table. Never edits files; Bash is hook-restricted to `git diff`/`git status` |
+
 ## Hooks
 
 This plugin includes SessionStart, PreToolUse, and PostToolUse hooks that validate the Very Good CLI, guard against CLI bypass, and automatically run Dart analysis and formatting on `.dart` files.
@@ -64,6 +72,7 @@ This plugin includes SessionStart, PreToolUse, and PostToolUse hooks that valida
 | **Warn Missing MCP** (`warn-missing-mcp.sh`) | SessionStart | Warns if the Very Good CLI is missing or older than 1.3.0; non-blocking |
 | **Check VGV CLI** (`check-vgv-cli.sh`) | PreToolUse (`mcp__.*very-good-cli__.*`) | Auto-approves Very Good CLI MCP tool calls in every run mode via a PreToolUse `allow` decision, so they never dead-end when the tool isn't on `permissions.allow` (including under `skipAutoPermissionPrompt`); denies with an install/upgrade message if the CLI is missing or < 1.3.0 |
 | **Block CLI Workarounds** (`block-cli-workarounds.sh`) | PreToolUse (`Bash`) | Blocks direct CLI bypass of Very Good CLI commands through the Bash tool; exits 2 on failure (blocking) |
+| **Allow Read-only Git** (`allow-readonly-git.sh`) | PreToolUse (`Bash`, `flutter-reviewer` agent only) | Restricts the `flutter-reviewer` agent's Bash to `git diff`/`git status`; exits 2 on anything else (blocking). Scoped via the agent's frontmatter, not `hooks.json` |
 | **Analyze** (`analyze.sh`) | PostToolUse (`Edit`/`Write`) | Runs `dart analyze` on the modified `.dart` file; exits 2 on failure (blocking — Claude must fix issues before continuing) |
 | **Format** (`format.sh`) | PostToolUse (`Edit`/`Write`) | Runs `dart format` on the modified `.dart` file; always exits 0 (non-blocking — formatting is applied silently) |
 
